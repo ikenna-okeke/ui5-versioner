@@ -3,6 +3,12 @@ const path = require("path");
 const readline = require("readline");
 const { execFileSync } = require("child_process");
 
+const {
+  getLatestUi5Version,
+  getLatestLtsUi5Version
+} = require("./ui5VersionProvider");    
+
+
 const VALID_BUMPS = new Set(["patch", "minor", "major", "skip"]);
 
 function parseArgs(argv) {
@@ -137,6 +143,18 @@ function writeManifest(manifestPath, manifest) {
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 }
 
+function ensureObject(parent, key) {
+  if (
+    !parent[key] ||
+    typeof parent[key] !== "object" ||
+    Array.isArray(parent[key])
+  ) {
+    parent[key] = {};
+  }
+
+  return parent[key];
+}
+
 function getApplicationVersion(manifest, manifestPath) {
   const version = manifest["sap.app"]?.applicationVersion?.version;
 
@@ -247,6 +265,79 @@ function stageFile(filePath) {
   }
 }
 
+async function upgradeUi5Runtime(
+  appInfos,
+  strategy,
+  options
+) {
+  const targetVersion =
+    strategy === "lts"
+      ? await getLatestLtsUi5Version()
+      : await getLatestUi5Version();
+
+  console.log("");
+  console.log(
+    `Using UI5 version: ${targetVersion}`
+  );
+
+  const results = [];
+
+  for (const app of appInfos) {
+    const result = updateUi5Version(
+      app.manifest,
+      targetVersion
+    );
+
+    results.push({
+      app,
+      ...result
+    });
+  }
+
+  console.log("");
+  console.log("UI5 Upgrade Summary:");
+
+  
+    results.forEach((result) => {
+    if (!result.changed) {
+        console.log(
+        `${result.app.name}: already on ${result.newVersion}`
+        );
+        return;
+    }
+
+    console.log(
+        `${result.app.name}: ${result.oldVersion || "<missing>"} -> ${result.newVersion}`
+    );
+    });
+
+
+  if (options.dryRun) {
+    console.log("");
+    console.log(
+      "Dry run only. No files were changed."
+    );
+
+    return;
+  }
+
+  for (const result of results) {
+    writeManifest(
+      result.app.manifestPath,
+      result.app.manifest
+    );
+
+    if (options.stage) {
+      stageFile(result.app.manifestPath);
+    }
+  }
+
+  console.log("");
+  console.log(
+    "Updated sap.platform.cf.ui5VersionNumber successfully."
+  );
+}
+
 async function release(options) {
   let appPaths;
 
@@ -322,6 +413,56 @@ async function release(options) {
   console.log("\nUpdated manifest application versions successfully.");
 }
 
+
+function buildAppInfos(options) {
+  let appPaths;
+
+  if (options.apps.length > 0) {
+    appPaths = options.apps.map((appName) =>
+      path.join(options.appsRoot, appName)
+    );
+  } else if (options.all) {
+    appPaths = discoverAllApps(options.appsRoot);
+  } else {
+    appPaths = appsFromChangedFiles(
+      getChangedFiles(),
+      options.appsRoot
+    );
+  }
+
+  appPaths = unique(appPaths).filter((appPath) =>
+    fs.existsSync(
+      path.join(
+        appPath,
+        "webapp",
+        "manifest.json"
+      )
+    )
+  );
+
+  return appPaths.map((appPath) => {
+    const manifestPath = path.join(
+      appPath,
+      "webapp",
+      "manifest.json"
+    );
+
+    const manifest =
+      readManifest(manifestPath);
+
+    return {
+      name: shortAppName(
+        appPath,
+        options.appsRoot
+      ),
+      appPath,
+      manifestPath,
+      manifest
+    };
+  });
+}
+
+
 async function main() {
   try {
     const options = parseArgs(process.argv);
@@ -330,16 +471,79 @@ async function main() {
       printHelp();
       return;
     }
-
-    if (options.command !== "release") {
-      throw new Error(`Unknown command: ${options.command}`);
+ 
+    if (options.command === "release") {
+        await release(options);
+        return;
     }
 
-    await release(options);
+    if (
+    options.command ===
+    "upgrade-ui5-latest"
+    ) {
+        const appInfos =
+            buildAppInfos(options);
+
+        await upgradeUi5Runtime(
+            appInfos,
+            "latest",
+            options
+        );
+
+        return;
+    }
+
+    if (
+    options.command ===
+    "upgrade-ui5-lts"
+    ) {
+        const appInfos =
+            buildAppInfos(options);
+
+        await upgradeUi5Runtime(
+            appInfos,
+            "lts",
+            options
+        );
+
+        return;
+    }
+
+
+    if (options.command === "latest-ui5") {
+        console.log(await getLatestUi5Version());
+        return;
+    }
+
+    if (options.command === "lts-ui5") {
+        console.log(await getLatestLtsUi5Version());
+        return;
+    }
+
+    throw new Error(`Unknown command: ${options.command}`);
+
   } catch (error) {
     console.error(`\nError: ${error.message}`);
     process.exit(1);
   }
+}
+
+function updateUi5Version(manifest, version) {
+  const sapPlatformCf = ensureObject(
+    manifest,
+    "sap.platform.cf"
+  );
+
+  const oldVersion =
+    sapPlatformCf.ui5VersionNumber || null;
+
+  sapPlatformCf.ui5VersionNumber = version;
+
+  return {
+    oldVersion,
+    newVersion: version,
+    changed: oldVersion !== version
+  };
 }
 
 main();
