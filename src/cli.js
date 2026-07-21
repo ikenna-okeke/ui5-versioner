@@ -297,7 +297,6 @@ async function upgradeUi5Runtime(
   console.log("");
   console.log("UI5 Upgrade Summary:");
 
-  
     results.forEach((result) => {
     if (!result.changed) {
         console.log(
@@ -312,26 +311,51 @@ async function upgradeUi5Runtime(
     });
 
 
-  if (options.dryRun) {
-    console.log("");
-    console.log(
-      "Dry run only. No files were changed."
-    );
 
-    return;
-  }
+if (options.dryRun) {
 
   for (const result of results) {
-    writeManifest(
-      result.app.manifestPath,
-      result.app.manifest
+    updateBootstrapFile(
+      result.app.appPath,
+      targetVersion,
+      true
     );
-
-    if (options.stage) {
-      stageFile(result.app.manifestPath);
-    }
   }
 
+  console.log("");
+  console.log(
+    "Dry run only. No files were changed."
+  );
+
+  return;
+}
+
+    for (const result of results) {
+        writeManifest(
+            result.app.manifestPath,
+            result.app.manifest
+        );
+
+        const htmlPath =
+            updateBootstrapFile(
+            result.app.appPath,
+            targetVersion,
+            false
+            );
+
+        if (
+            htmlPath &&
+            options.stage
+        ) {
+            stageFile(htmlPath);
+        }
+
+        if (options.stage) {
+            stageFile(
+            result.app.manifestPath
+            );
+        }
+ }
   console.log("");
   console.log(
     "Updated sap.platform.cf.ui5VersionNumber successfully."
@@ -546,4 +570,87 @@ function updateUi5Version(manifest, version) {
   };
 }
 
+function updateBootstrapHtml(
+  htmlContent,
+  ui5Version
+) {
+  const pattern =
+    /https:\/\/sapui5\.hana\.ondemand\.com\/[^\/]+\/resources\/sap-ui-core\.js/g;
+
+  const replacement =
+    `https://sapui5.hana.ondemand.com/${ui5Version}/resources/sap-ui-core.js`;
+
+  return htmlContent.replace(
+    pattern,
+    replacement
+  );
+}
+
+function updateBootstrapFile(
+  appPath,
+  ui5Version,
+  dryRun
+) {
+  const htmlPath = path.join(
+    appPath,
+    "webapp",
+    "index.html"
+  );
+
+  if (!fs.existsSync(htmlPath)) {
+    console.log(
+      `No index.html found for ${appPath}`
+    );
+    return null;
+  }
+
+  const html = fs.readFileSync(
+    htmlPath,
+    "utf8"
+  );
+
+  const updatedHtml =
+    updateBootstrapHtml(
+      html,
+      ui5Version
+    );
+
+  if (html === updatedHtml) {
+    console.log(
+      `Bootstrap already uses UI5 ${ui5Version}`
+    );
+
+    return null;
+  }
+
+  if (dryRun) {
+
+  const currentMatch = html.match(
+    /https:\/\/sapui5\.hana\.ondemand\.com\/([^\/]+)\/resources\/sap-ui-core\.js/
+  );
+
+  const currentVersion = currentMatch
+    ? currentMatch[1]
+    : "<unknown>";
+
+  console.log(
+    `[DRY RUN] Bootstrap: ${currentVersion} -> ${ui5Version}`
+  );
+
+  return htmlPath;
+}
+
+
+  fs.writeFileSync(
+    htmlPath,
+    updatedHtml,
+    "utf8"
+  );
+
+  console.log(
+    `Updated bootstrap in ${htmlPath}`
+  );
+
+  return htmlPath;
+}
 main();
