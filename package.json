@@ -1,0 +1,23 @@
+{
+  "name": "ui5-version",
+  "version": "0.1.0",
+  "description": "CLI to detect changed SAPUI5 apps in a monorepo and bump sap.app.applicationVersion.version per app.",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "ui5-version": "./bin/ui5-version.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "release": "node ./bin/ui5-version.js release",
+    "release:dry": "node ./bin/ui5-version.js release --dry-run"
+  }
+}
