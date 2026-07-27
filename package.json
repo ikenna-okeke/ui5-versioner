@@ -1,6 +1,6 @@
 {
   "name": "ui5-lifecycle",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI to detect changed SAPUI5 apps in a monorepo and bump sap.app.applicationVersion.version per app.",
   "license": "MIT",
   "type": "commonjs",
