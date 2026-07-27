@@ -5,9 +5,8 @@ const { execFileSync } = require("child_process");
 
 const {
   getLatestUi5Version,
-  getLatestLtsUi5Version
-} = require("./ui5VersionProvider");    
-
+  getLatestLtsUi5Version,
+} = require("./ui5VersionProvider");
 
 const VALID_BUMPS = new Set(["patch", "minor", "major", "skip"]);
 
@@ -21,7 +20,7 @@ function parseArgs(argv) {
     stage: true,
     noStage: false,
     type: null,
-    apps: []
+    apps: [],
   };
 
   for (let i = 1; i < args.length; i++) {
@@ -45,34 +44,34 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`
-Usage:
-  ui5-version release [patch|minor|major] [options]
+    Usage:
+      ui5-version release [patch|minor|major] [options]
 
-Examples:
-  ui5-version release
-  ui5-version release --dry-run
-  ui5-version release patch
-  ui5-version release --type minor
-  ui5-version release --app production-orders --type patch
-  ui5-version release --all --type patch
-  ui5-version release --root apps
+    Examples:
+      ui5-version release
+      ui5-version release --dry-run
+      ui5-version release patch
+      ui5-version release --type minor
+      ui5-version release --app production-orders --type patch
+      ui5-version release --all --type patch
+      ui5-version release --root apps
 
-Options:
-  --root <dir>       App root folder. Default: app
-  --all              Include all UI5 apps under the app root
-  --app <name>       Include a specific app. Can be used multiple times
-  --type <type>      Apply one bump type to all selected apps: patch, minor, major
-  --dry-run          Print planned changes without writing files
-  --stage            Stage changed manifest files. Default: true
-  --no-stage         Do not run git add after writing manifests
-`);
+    Options:
+      --root <dir>       App root folder. Default: app
+      --all              Include all UI5 apps under the app root
+      --app <name>       Include a specific app. Can be used multiple times
+      --type <type>      Apply one bump type to all selected apps: patch, minor, major
+      --dry-run          Print planned changes without writing files
+      --stage            Stage changed manifest files. Default: true
+      --no-stage         Do not run git add after writing manifests
+    `);
 }
 
 function runGit(args) {
   try {
     return execFileSync("git", args, {
       encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"]
+      stdio: ["ignore", "pipe", "ignore"],
     }).trim();
   } catch (_) {
     return "";
@@ -84,20 +83,25 @@ function unique(values) {
 }
 
 //Gets which files have been changed by using the git
-function getChangedFiles() {  
+function getChangedFiles() {
   const unstaged = runGit(["diff", "--name-only"]);
   const staged = runGit(["diff", "--cached", "--name-only"]);
   const untracked = runGit(["ls-files", "--others", "--exclude-standard"]);
-  return unique(`${unstaged}\n${staged}\n${untracked}`.split("\n").map((x) => x.trim()));
+  return unique(
+    `${unstaged}\n${staged}\n${untracked}`.split("\n").map((x) => x.trim()),
+  );
 }
 
 function discoverAllApps(appsRoot) {
   if (!fs.existsSync(appsRoot)) return [];
 
-  return fs.readdirSync(appsRoot, { withFileTypes: true })
+  return fs
+    .readdirSync(appsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => path.join(appsRoot, entry.name))
-    .filter((appPath) => fs.existsSync(path.join(appPath, "webapp", "manifest.json")));
+    .filter((appPath) =>
+      fs.existsSync(path.join(appPath, "webapp", "manifest.json")),
+    );
 }
 
 //Gets which apps the changed files belong
@@ -140,7 +144,11 @@ function readManifest(manifestPath) {
 }
 
 function writeManifest(manifestPath, manifest) {
-  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  fs.writeFileSync(
+    manifestPath,
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    "utf8",
+  );
 }
 
 function ensureObject(parent, key) {
@@ -159,7 +167,10 @@ function getApplicationVersion(manifest, manifestPath) {
   const version = manifest["sap.app"]?.applicationVersion?.version;
 
   if (!version) {
-    throw new Error(`Missing sap.app.applicationVersion.version in ${manifestPath}`);
+    //Change to if there is no version add the version 1.0.0 for the user and not throw an error
+    throw new Error(
+      `Missing sap.app.applicationVersion.version in ${manifestPath}`,
+    );
   }
 
   return version;
@@ -196,16 +207,17 @@ function bumpVersion(version, bumpType) {
 function createQuestioner() {
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
   return {
     ask(question) {
+      //Where is this ask and question coming from?
       return new Promise((resolve) => rl.question(question, resolve));
     },
     close() {
       rl.close();
-    }
+    },
   };
 }
 
@@ -250,7 +262,8 @@ async function chooseBumpTypes(appInfos, options) {
 }
 
 function normalizeBumpAnswer(answer) {
-  if (!answer || answer === "p" || answer.toLowerCase() === "patch") return "patch";
+  if (!answer || answer === "p" || answer.toLowerCase() === "patch")
+    return "patch";
   if (answer === "m" || answer.toLowerCase() === "minor") return "minor";
   if (answer === "M" || answer.toLowerCase() === "major") return "major";
   if (answer === "s" || answer.toLowerCase() === "skip") return "skip";
@@ -261,112 +274,85 @@ function stageFile(filePath) {
   try {
     execFileSync("git", ["add", filePath], { stdio: "inherit" });
   } catch (_) {
-    console.warn(`Could not stage ${filePath}. You may not be inside a git repository.`);
+    console.warn(
+      `Could not stage ${filePath}. You may not be inside a git repository.`,
+    );
   }
 }
 
-async function upgradeUi5Runtime(
-  appInfos,
-  strategy,
-  options
-) {
+async function upgradeUi5Runtime(appInfos, strategy, options) {
   const targetVersion =
     strategy === "lts"
       ? await getLatestLtsUi5Version()
       : await getLatestUi5Version();
 
   console.log("");
-  console.log(
-    `Using UI5 version: ${targetVersion}`
-  );
+  console.log(`Using UI5 version: ${targetVersion}`);
 
   const results = [];
 
   for (const app of appInfos) {
-    const result = updateUi5Version(
-      app.manifest,
-      targetVersion
-    );
+    const result = updateUi5Version(app.manifest, targetVersion);
 
     results.push({
       app,
-      ...result
+      ...result,
     });
   }
 
   console.log("");
   console.log("UI5 Upgrade Summary:");
 
-    results.forEach((result) => {
+  results.forEach((result) => {
     if (!result.changed) {
-        console.log(
-        `${result.app.name}: already on ${result.newVersion}`
-        );
-        return;
+      console.log(`${result.app.name}: already on ${result.newVersion}`);
+      return;
     }
 
     console.log(
-        `${result.app.name}: ${result.oldVersion || "<missing>"} -> ${result.newVersion}`
+      `${result.app.name}: ${result.oldVersion || "<missing>"} -> ${result.newVersion}`,
     );
-    });
+  });
 
+  if (options.dryRun) {
+    for (const result of results) {
+      updateBootstrapFile(result.app.appPath, targetVersion, true);
+    }
 
+    console.log("");
+    console.log("Dry run only. No files were changed.");
 
-if (options.dryRun) {
-
-  for (const result of results) {
-    updateBootstrapFile(
-      result.app.appPath,
-      targetVersion,
-      true
-    );
+    return;
   }
 
+  for (const result of results) {
+    writeManifest(result.app.manifestPath, result.app.manifest);
+
+    const htmlPath = updateBootstrapFile(
+      result.app.appPath,
+      targetVersion,
+      false,
+    );
+
+    if (htmlPath && options.stage) {
+      stageFile(htmlPath);
+    }
+
+    if (options.stage) {
+      stageFile(result.app.manifestPath);
+    }
+  }
   console.log("");
-  console.log(
-    "Dry run only. No files were changed."
-  );
-
-  return;
-}
-
-    for (const result of results) {
-        writeManifest(
-            result.app.manifestPath,
-            result.app.manifest
-        );
-
-        const htmlPath =
-            updateBootstrapFile(
-            result.app.appPath,
-            targetVersion,
-            false
-            );
-
-        if (
-            htmlPath &&
-            options.stage
-        ) {
-            stageFile(htmlPath);
-        }
-
-        if (options.stage) {
-            stageFile(
-            result.app.manifestPath
-            );
-        }
- }
-  console.log("");
-  console.log(
-    "Updated sap.platform.cf.ui5VersionNumber successfully."
-  );
+  console.log("Updated sap.platform.cf.ui5VersionNumber successfully.");
 }
 
 async function release(options) {
   let appPaths;
 
   if (options.apps.length > 0) {
-    appPaths = options.apps.map((appName) => path.join(options.appsRoot, appName));
+    appPaths = options.apps.map((appName) =>
+      path.join(options.appsRoot, appName),
+    );
   } else if (options.all) {
     appPaths = discoverAllApps(options.appsRoot);
   } else {
@@ -374,12 +360,14 @@ async function release(options) {
   }
 
   appPaths = unique(appPaths).filter((appPath) =>
-    fs.existsSync(path.join(appPath, "webapp", "manifest.json"))
+    fs.existsSync(path.join(appPath, "webapp", "manifest.json")),
   );
 
   if (appPaths.length === 0) {
     console.log("No changed UI5 apps with webapp/manifest.json were detected.");
-    console.log("Use --all to release all apps or --app <name> to target a specific app.");
+    console.log(
+      "Use --all to release all apps or --app <name> to target a specific app.",
+    );
     return;
   }
 
@@ -393,7 +381,7 @@ async function release(options) {
       appPath,
       manifestPath,
       manifest,
-      currentVersion
+      currentVersion,
     };
   });
 
@@ -407,7 +395,7 @@ async function release(options) {
     .filter((app) => app.bumpType !== "skip")
     .map((app) => ({
       ...app,
-      nextVersion: bumpVersion(app.currentVersion, app.bumpType)
+      nextVersion: bumpVersion(app.currentVersion, app.bumpType),
     }));
 
   if (planned.length === 0) {
@@ -417,7 +405,9 @@ async function release(options) {
 
   console.log("\nRelease summary:");
   for (const app of planned) {
-    console.log(`  - ${app.name}: ${app.currentVersion} -> ${app.nextVersion} (${app.bumpType})`);
+    console.log(
+      `  - ${app.name}: ${app.currentVersion} -> ${app.nextVersion} (${app.bumpType})`,
+    );
   }
 
   if (options.dryRun) {
@@ -437,55 +427,36 @@ async function release(options) {
   console.log("\nUpdated manifest application versions successfully.");
 }
 
-
 function buildAppInfos(options) {
   let appPaths;
 
   if (options.apps.length > 0) {
     appPaths = options.apps.map((appName) =>
-      path.join(options.appsRoot, appName)
+      path.join(options.appsRoot, appName),
     );
   } else if (options.all) {
     appPaths = discoverAllApps(options.appsRoot);
   } else {
-    appPaths = appsFromChangedFiles(
-      getChangedFiles(),
-      options.appsRoot
-    );
+    appPaths = appsFromChangedFiles(getChangedFiles(), options.appsRoot);
   }
 
   appPaths = unique(appPaths).filter((appPath) =>
-    fs.existsSync(
-      path.join(
-        appPath,
-        "webapp",
-        "manifest.json"
-      )
-    )
+    fs.existsSync(path.join(appPath, "webapp", "manifest.json")),
   );
 
   return appPaths.map((appPath) => {
-    const manifestPath = path.join(
-      appPath,
-      "webapp",
-      "manifest.json"
-    );
+    const manifestPath = path.join(appPath, "webapp", "manifest.json");
 
-    const manifest =
-      readManifest(manifestPath);
+    const manifest = readManifest(manifestPath);
 
     return {
-      name: shortAppName(
-        appPath,
-        options.appsRoot
-      ),
+      name: shortAppName(appPath, options.appsRoot),
       appPath,
       manifestPath,
-      manifest
+      manifest,
     };
   });
 }
-
 
 async function main() {
   try {
@@ -495,57 +466,39 @@ async function main() {
       printHelp();
       return;
     }
- 
+
     if (options.command === "release") {
-        await release(options);
-        return;
+      await release(options);
+      return;
     }
 
-    if (
-    options.command ===
-    "upgrade-ui5-latest"
-    ) {
-        const appInfos =
-            buildAppInfos(options);
+    if (options.command === "upgrade-ui5-latest") {
+      const appInfos = buildAppInfos(options);
 
-        await upgradeUi5Runtime(
-            appInfos,
-            "latest",
-            options
-        );
+      await upgradeUi5Runtime(appInfos, "latest", options);
 
-        return;
+      return;
     }
 
-    if (
-    options.command ===
-    "upgrade-ui5-lts"
-    ) {
-        const appInfos =
-            buildAppInfos(options);
+    if (options.command === "upgrade-ui5-lts") {
+      const appInfos = buildAppInfos(options);
 
-        await upgradeUi5Runtime(
-            appInfos,
-            "lts",
-            options
-        );
+      await upgradeUi5Runtime(appInfos, "lts", options);
 
-        return;
+      return;
     }
-
 
     if (options.command === "latest-ui5") {
-        console.log(await getLatestUi5Version());
-        return;
+      console.log(await getLatestUi5Version());
+      return;
     }
 
     if (options.command === "lts-ui5") {
-        console.log(await getLatestLtsUi5Version());
-        return;
+      console.log(await getLatestLtsUi5Version());
+      return;
     }
 
     throw new Error(`Unknown command: ${options.command}`);
-
   } catch (error) {
     console.error(`\nError: ${error.message}`);
     process.exit(1);
@@ -553,103 +506,61 @@ async function main() {
 }
 
 function updateUi5Version(manifest, version) {
-  const sapPlatformCf = ensureObject(
-    manifest,
-    "sap.platform.cf"
-  );
+  const sapPlatformCf = ensureObject(manifest, "sap.platform.cf");
 
-  const oldVersion =
-    sapPlatformCf.ui5VersionNumber || null;
+  const oldVersion = sapPlatformCf.ui5VersionNumber || null;
 
   sapPlatformCf.ui5VersionNumber = version;
 
   return {
     oldVersion,
     newVersion: version,
-    changed: oldVersion !== version
+    changed: oldVersion !== version,
   };
 }
 
-function updateBootstrapHtml(
-  htmlContent,
-  ui5Version
-) {
+function updateBootstrapHtml(htmlContent, ui5Version) {
   const pattern =
     /https:\/\/sapui5\.hana\.ondemand\.com\/[^\/]+\/resources\/sap-ui-core\.js/g;
 
-  const replacement =
-    `https://sapui5.hana.ondemand.com/${ui5Version}/resources/sap-ui-core.js`;
+  const replacement = `https://sapui5.hana.ondemand.com/${ui5Version}/resources/sap-ui-core.js`;
 
-  return htmlContent.replace(
-    pattern,
-    replacement
-  );
+  return htmlContent.replace(pattern, replacement);
 }
 
-function updateBootstrapFile(
-  appPath,
-  ui5Version,
-  dryRun
-) {
-  const htmlPath = path.join(
-    appPath,
-    "webapp",
-    "index.html"
-  );
+function updateBootstrapFile(appPath, ui5Version, dryRun) {
+  const htmlPath = path.join(appPath, "webapp", "index.html");
 
   if (!fs.existsSync(htmlPath)) {
-    console.log(
-      `No index.html found for ${appPath}`
-    );
+    console.log(`No index.html found for ${appPath}`);
     return null;
   }
 
-  const html = fs.readFileSync(
-    htmlPath,
-    "utf8"
-  );
+  const html = fs.readFileSync(htmlPath, "utf8");
 
-  const updatedHtml =
-    updateBootstrapHtml(
-      html,
-      ui5Version
-    );
+  const updatedHtml = updateBootstrapHtml(html, ui5Version);
 
   if (html === updatedHtml) {
-    console.log(
-      `Bootstrap already uses UI5 ${ui5Version}`
-    );
+    console.log(`Bootstrap already uses UI5 ${ui5Version}`);
 
     return null;
   }
 
   if (dryRun) {
+    const currentMatch = html.match(
+      /https:\/\/sapui5\.hana\.ondemand\.com\/([^\/]+)\/resources\/sap-ui-core\.js/,
+    );
 
-  const currentMatch = html.match(
-    /https:\/\/sapui5\.hana\.ondemand\.com\/([^\/]+)\/resources\/sap-ui-core\.js/
-  );
+    const currentVersion = currentMatch ? currentMatch[1] : "<unknown>";
 
-  const currentVersion = currentMatch
-    ? currentMatch[1]
-    : "<unknown>";
+    console.log(`[DRY RUN] Bootstrap: ${currentVersion} -> ${ui5Version}`);
 
-  console.log(
-    `[DRY RUN] Bootstrap: ${currentVersion} -> ${ui5Version}`
-  );
+    return htmlPath;
+  }
 
-  return htmlPath;
-}
+  fs.writeFileSync(htmlPath, updatedHtml, "utf8");
 
-
-  fs.writeFileSync(
-    htmlPath,
-    updatedHtml,
-    "utf8"
-  );
-
-  console.log(
-    `Updated bootstrap in ${htmlPath}`
-  );
+  console.log(`Updated bootstrap in ${htmlPath}`);
 
   return htmlPath;
 }
