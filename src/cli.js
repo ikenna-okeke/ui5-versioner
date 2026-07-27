@@ -167,7 +167,6 @@ function getApplicationVersion(manifest, manifestPath) {
   const version = manifest["sap.app"]?.applicationVersion?.version;
 
   if (!version) {
-    //Change to if there is no version add the version 1.0.0 for the user and not throw an error
     throw new Error(
       `Missing sap.app.applicationVersion.version in ${manifestPath}`,
     );
