@@ -1,11 +1,12 @@
 {
   "name": "ui5-lifecycle",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "CLI to detect changed SAPUI5 apps in a monorepo and bump sap.app.applicationVersion.version per app.",
   "license": "MIT",
   "type": "commonjs",
   "bin": {
-    "ui5-version": "./bin/ui5-version.js"
+    "ui5-lifecycle": "./bin/ui5-lifecycle.js",
+    "ui5-version": "./bin/ui5-lifecycle.js"
   },
   "files": [
     "bin",
@@ -17,7 +18,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "release": "node ./bin/ui5-version.js release",
-    "release:dry": "node ./bin/ui5-version.js release --dry-run"
+    "release": "node ./bin/ui5-lifecycle.js release",
+    "release:dry": "node ./bin/ui5-lifecycle.js release --dry-run"
   }
 }

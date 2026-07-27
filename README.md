@@ -35,7 +35,7 @@ npm install -g ui5-lifecycle
 Verify installation:
 
 ```bash
-ui5-version latest-ui5
+ui5-lifecycle latest-ui5
 ```
 
 ---
@@ -78,7 +78,7 @@ UI5 Lifecycle can automatically keep this value up-to-date.
 ## Get latest SAPUI5 version
 
 ```bash
-ui5-version latest-ui5
+ui5-lifecycle latest-ui5
 ```
 
 Example:
@@ -92,7 +92,7 @@ Example:
 ## Get latest SAPUI5 LTS version
 
 ```bash
-ui5-version lts-ui5
+ui5-lifecycle lts-ui5
 ```
 
 Example:
@@ -106,7 +106,7 @@ Example:
 ## Interactive Application Release
 
 ```bash
-ui5-version release
+ui5-lifecycle release
 ```
 
 Example:
@@ -127,7 +127,7 @@ Select bump type [p/m/M/s]:
 ## Release All Applications
 
 ```bash
-ui5-version release --all
+ui5-lifecycle release --all
 ```
 
 ---
@@ -135,7 +135,7 @@ ui5-version release --all
 ## Release a Specific Application
 
 ```bash
-ui5-version release --app APPLICATION_NAME
+ui5-lifecycle release --app APPLICATION_NAME
 ```
 
 ---
@@ -143,7 +143,7 @@ ui5-version release --app APPLICATION_NAME
 ## Dry Run Release
 
 ```bash
-ui5-version release --dry-run
+ui5-lifecycle release --dry-run
 ```
 
 No files are modified.
@@ -153,7 +153,7 @@ No files are modified.
 ## Upgrade to Latest SAPUI5 Runtime
 
 ```bash
-ui5-version upgrade-ui5-latest --all
+ui5-lifecycle upgrade-ui5-latest --all
 ```
 
 This updates:
@@ -171,7 +171,7 @@ This updates:
 ## Upgrade to Latest SAPUI5 LTS Runtime
 
 ```bash
-ui5-version upgrade-ui5-lts --all
+ui5-lifecycle upgrade-ui5-lts --all
 ```
 
 This updates:
@@ -189,13 +189,13 @@ This updates:
 ## Dry Run UI5 Upgrade
 
 ```bash
-ui5-version upgrade-ui5-latest --all --dry-run
+ui5-lifecycle upgrade-ui5-latest --all --dry-run
 ```
 
 or
 
 ```bash
-ui5-version upgrade-ui5-lts --all --dry-run
+ui5-lifecycle upgrade-ui5-lts --all --dry-run
 ```
 
 No files are modified.
