@@ -1,0 +1,7 @@
+# npm package archives
+*.tgz
+
+# personal notes
+myIdeas.md
+
+node_modules/
