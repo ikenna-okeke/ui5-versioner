@@ -5,7 +5,6 @@ CLI for SAPUI5 developers to manage application versions and SAPUI5 runtime vers
 Perfect for SAP Build Work Zone, SAP BTP HTML5 applications, and SAPUI5 monorepos.
 
 ---
-
 ## Features
 
 ✅ Detect changed SAPUI5 applications automatically using Git
@@ -330,6 +329,19 @@ and maps them to the corresponding UI5 application.
 
 ---
 
+## Feedback & Support
+
+Found a bug?
+
+Have a feature request?
+
+Have an idea to improve UI5 Lifecycle?
+
+Please create an issue on GitHub:
+
+👉 [Create an Issue](https://github.com/ikenna-okeke/ui5-lifecycle/issues)
+
+I welcome suggestions, feedback, and contributions from the SAPUI5 community.
 # License
 
 MIT
