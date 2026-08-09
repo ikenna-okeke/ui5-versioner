@@ -5,6 +5,7 @@ CLI for SAPUI5 developers to manage application versions and SAPUI5 runtime vers
 Perfect for SAP Build Work Zone, SAP BTP HTML5 applications, and SAPUI5 monorepos.
 
 ---
+
 ## Features
 
 ✅ Detect changed SAPUI5 applications automatically using Git
@@ -110,6 +111,7 @@ ui5-lifecycle release
 
 Example:
 CustomerApp currently Deployed on the BTP has version (1.0.1) and needs a version bump, using the ui5-lifecycle, the versions could be bumped in this manner
+
 ```text
 
 p  patch  1.0.1 -> 1.0.2
@@ -123,6 +125,7 @@ Select bump type [p/m/M/s]:
 ---
 
 ## Release All Applications
+
 This is used to upgrade the major, minor or patch version for ALL your applications present in the app folder.
 
 ```bash
@@ -132,6 +135,7 @@ ui5-lifecycle release --all
 ---
 
 ## Release a Specific Application
+
 APPLICATION_NAME is the name of the file in the app folder eg app/customerApp, APPLICATION_NAME becomes customerApp
 
 ```bash
@@ -141,7 +145,9 @@ ui5-lifecycle release --app APPLICATION_NAME
 ---
 
 ## Dry Run Release
+
 Dry run is used to test run the specific command and see how it would work before making actual changes
+
 ```bash
 ui5-lifecycle release --dry-run
 ```
@@ -151,8 +157,10 @@ No files are modified.
 ---
 
 ## Upgrade to Latest SAPUI5 Runtime
+
 checks and works with the latest ui5 version provided by SAP in https://ui5.sap.com/versionoverview.html.
 This command also updates the SAPUI5 Bootstrap URL in the index.html to the latest ui5 version as seen in the "SAPUI5 Bootstrap URL" section below
+
 ```bash
 ui5-lifecycle upgrade-ui5-latest --all
 ```
@@ -184,8 +192,8 @@ This updates:
   }
 }
 ```
-This command also updates the SAPUI5 Bootstrap URL in the index.html to the LTS ui5 version
----
+
+## This command also updates the SAPUI5 Bootstrap URL in the index.html to the LTS ui5 version
 
 ## SAPUI5 Bootstrap URL
 
@@ -202,12 +210,11 @@ After:
 ```html
 <script
   id="sap-ui-bootstrap"
-  src="https://sapui5.hana.ondemand.com/1.150.0/resources/sap-ui-core.js">
-</script>
+  src="https://sapui5.hana.ondemand.com/1.150.0/resources/sap-ui-core.js"
+></script>
 ```
 
 This helps keep the bootstrap URL aligned with the runtime version configured in `manifest.json`.
-
 
 ---
 
@@ -329,6 +336,10 @@ and maps them to the corresponding UI5 application.
 
 ---
 
+## LINKS
+
+- Post on SAP Community forum: https://community.sap.com/t5/technology-blog-posts-by-members/sap-ui5-and-fiori-version-manager/ba-p/14451351
+
 ## Feedback & Support
 
 Found a bug?
@@ -342,6 +353,7 @@ Please create an issue on GitHub:
 👉 [Create an Issue](https://github.com/ikenna-okeke/ui5-lifecycle/issues)
 
 I welcome suggestions, feedback, and contributions from the SAPUI5 community.
+
 # License
 
 MIT

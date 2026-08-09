@@ -1,43 +1,35 @@
 {
   "name": "ui5-lifecycle",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "description": "CLI for SAPUI5 developers to manage application versions and SAPUI5 runtime versions across multiple applications.",
   "license": "MIT",
   "author": "Ikenna Cornelius Okeke",
   "type": "commonjs",
-
   "homepage": "https://github.com/ikenna-okeke/ui5-lifecycle",
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ikenna-okeke/ui5-lifecycle.git"
   },
-
   "bugs": {
     "url": "https://github.com/ikenna-okeke/ui5-lifecycle/issues"
   },
-
   "bin": {
     "ui5-lifecycle": "./bin/ui5-lifecycle.js",
     "ui5-version": "./bin/ui5-lifecycle.js"
   },
-
   "files": [
     "bin",
     "src",
     "README.md",
     "LICENSE"
   ],
-
   "engines": {
     "node": ">=18"
   },
-
   "scripts": {
     "release": "node ./bin/ui5-lifecycle.js release",
     "release:dry": "node ./bin/ui5-lifecycle.js release --dry-run"
   },
-
   "keywords": [
     "sap",
     "sapui5",
